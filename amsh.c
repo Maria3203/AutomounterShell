@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
+
 typedef struct {
 	char sursa[70];
 	char destinatie[70];
@@ -26,6 +28,25 @@ void configuratie(char *fisier_citire){
 	printf("S-au incarcat %d configuratii din fisier.\n", nr_montari);
 }
 
+void initializare_timp_lavinia(){
+	time_t acum = time(NULL);
+	for (int i = 0; i < nr_montari; i++){
+		lista_montari[i].ultima_accesare = acum ;
+	}
+	printf(" Toate mountpointurile au fost initializare cu timpul curent.\n");
+}
+void afisare_status_timer_lavinia(){
+	time_t acum = time(NULL);
+	printf("STATUS TIMP:\n");
+	for ( int i = 0; i < nr_montari; i++){
+		double secunde_trecute = difftime(acum, lista_montari[i].ultima_accesare);
+		printf("Punct: %s | Limita: %d s | Montat de: %0f s\n",
+			 lista_montari[i].destinatie,
+			 lista_montari[i].limita_timp,
+			 secunde_trecute);
+	}
+}
+
 int main(){
 	char line[1024];
 	char *comanda;
@@ -33,10 +54,11 @@ int main(){
 	int lungime;
 
 	configuratie("test_configurare");
+	initializare_timp_lavinia();
 	while(1) {
 		printf("amsh> ");
 		fflush(stdout);
-
+		afisare_status_timer_lavinia();
 		if (fgets(line, sizeof(line), stdin) == NULL) {
 			break;
 			}
@@ -52,6 +74,11 @@ int main(){
 
 		comanda = strtok(line, " ");
 		argument = strtok(NULL, " ");
+		 if (comanda != NULL && strcmp(comanda, "cd") == 0){
+
+
+                }
+
 
 		if (comanda != NULL) {
 
