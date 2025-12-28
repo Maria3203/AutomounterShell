@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>   // Pentru fork() si execvp()
+#include <sys/wait.h> // Pentru wait()
 
 typedef struct {
 	char sursa[70];
@@ -56,9 +58,11 @@ int main(){
 	configuratie("test_configurare");
 	initializare_timp_lavinia();
 	while(1) {
-		printf("amsh> ");
-		fflush(stdout);
+		printf("\n");
 		afisare_status_timer_lavinia();
+		printf("amsh> ");
+                fflush(stdout);
+
 		if (fgets(line, sizeof(line), stdin) == NULL) {
 			break;
 			}
@@ -86,17 +90,26 @@ int main(){
 				printf("Lista de mountpoint-uri active:\n");
 				for (int i = 0; i<nr_montari; i++){
 					printf("%d. %s -> %s (%d secunde)\n", i+1, lista_montari[i].sursa, lista_montari[i].destinatie, lista_montari[i].limita_timp);
-				}				
-					
-			}
-			else {
-				printf("Ai cerut comanda externa: %s\n",comanda);
 				}
-			if (argument) {
-					printf("Cu argumentul: %s\n", argument);
-					}
 			}
+			else { //saptamana2/
+				pid_t pid = fork();
+				if (pid==0){
+						char *args[] = {comanda, argument, NULL};
+					   	if (execvp(comanda, args) == -1) {
+                					perror("amsh");
+							}
+						exit(EXIT_FAILURE);
+					    }
+				else if (pid>0){
+						wait(NULL);
+						}
+				else{
+					perror("fork failed");
+				    }
+				}
 		}
+	}
 return 0;
 }
 
