@@ -59,7 +59,6 @@ int main(){
 	initializare_timp_lavinia();
 	while(1) {
 		printf("\n");
-		afisare_status_timer_lavinia();
 		printf("amsh> ");
                 fflush(stdout);
 
@@ -87,10 +86,30 @@ int main(){
 		if (comanda != NULL) {
 
 			if (strcmp(comanda, "cd") == 0) {
-				printf("Lista de mountpoint-uri active:\n");
-				for (int i = 0; i<nr_montari; i++){
-					printf("%d. %s -> %s (%d secunde)\n", i+1, lista_montari[i].sursa, lista_montari[i].destinatie, lista_montari[i].limita_timp);
+				for (int i=0; i<nr_montari;i++){
+					if (argument!=NULL && strcmp(argument, lista_montari[i].destinatie) == 0){
+						printf("Se activeaza montarea pt: %s\n ", argument);
+						lista_montari[i].ultima_accesare =time(NULL);
+						printf("Timp resetat pentru %s\n", argument);
+						//Pt Lavinia, pui aici montarea:(montare(lista_montari[i].sursa, lista_montari[i].destinatie); 
+						afisare_status_timer_lavinia();
+						break;
+					}
 				}
+				if (argument!=NULL){
+					if (chdir(argument) != 0){
+						perror("cd failed");
+					}
+				}else{
+					printf("Eroare: Introduceti cale pentru cd\n");
+				}
+			}
+			else if (strcmp(comanda, "lista") == 0){
+				printf("Lista de mountpoint-uri active:\n");
+                                for (int i = 0; i<nr_montari; i++){
+                                        printf("%d. %s -> %s (%d secunde)\n", i+1, lista_montari[i].sursa, lista_montari[i].destinatie, lista_montari[i].limita_timp);
+                                }
+
 			}
 			else { //saptamana2/
 				pid_t pid = fork();
