@@ -33,17 +33,28 @@ void initializare_timp_lavinia(){
 	for (int i = 0; i < nr_montari; i++){
 		lista_montari[i].ultima_accesare = acum ;
 	}
-	printf(" Toate mountpointurile au fost initializare cu timpul curent.\n");
+	printf(" Toate mountpointurile au fost initializate cu timpul curent.\n");
 }
 void afisare_status_timer_lavinia(){
 	time_t acum = time(NULL);
 	printf("STATUS TIMP:\n");
 	for ( int i = 0; i < nr_montari; i++){
 		double secunde_trecute = difftime(acum, lista_montari[i].ultima_accesare);
-		printf("Punct: %s | Limita: %d s | Montat de: %0f s\n",
+		printf("Punct: %s | Limita: %d s | Montat de: %0.f s\n",
 			 lista_montari[i].destinatie,
 			 lista_montari[i].limita_timp,
 			 secunde_trecute);
+	}
+}
+
+void actualizeaza_timp_acces_lavinia( char *cale_accesata){
+	if (cale_accesata == NULL) return;
+	for (int i=0; i< nr_montari; i++){
+		if(strcmp(cale_accesata, lista_montari[i].destinatie) == 0){
+			lista_montari[i].ultima_accesare = time(NULL);
+			printf("Cronometru resetat pentru: %s\n", cale_accesata);
+			return;
+		}
 	}
 }
 
@@ -74,10 +85,6 @@ int main(){
 
 		comanda = strtok(line, " ");
 		argument = strtok(NULL, " ");
-		 if (comanda != NULL && strcmp(comanda, "cd") == 0){
-
-
-                }
 
 
 		if (comanda != NULL) {
