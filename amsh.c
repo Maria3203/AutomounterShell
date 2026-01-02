@@ -35,17 +35,32 @@ void initializare_timp_lavinia(){
 	for (int i = 0; i < nr_montari; i++){
 		lista_montari[i].ultima_accesare = acum ;
 	}
-	printf(" Toate mountpointurile au fost initializare cu timpul curent.\n");
+	printf(" Toate mountpointurile au fost initializate cu timpul curent.\n");
 }
 void afisare_status_timer_lavinia(){
 	time_t acum = time(NULL);
 	printf("STATUS TIMP:\n");
 	for ( int i = 0; i < nr_montari; i++){
 		double secunde_trecute = difftime(acum, lista_montari[i].ultima_accesare);
-		printf("Punct: %s | Limita: %d s | Montat de: %0f s\n",
+		printf("Punct: %s | Limita: %d s | Montat de: %0.f s\n",
 			 lista_montari[i].destinatie,
 			 lista_montari[i].limita_timp,
 			 secunde_trecute);
+		if (secunde_trecute > lista_montari[i].limita_timp ){
+			printf("EXPIRAT - necesita demontare\n");
+		}else {
+			printf("OK\n");
+	}
+}
+
+void actualizeaza_timp_acces_lavinia( char *cale_accesata){
+	if (cale_accesata == NULL) return;
+	for (int i=0; i< nr_montari; i++){
+		if(strcmp(cale_accesata, lista_montari[i].destinatie) == 0){
+			lista_montari[i].ultima_accesare = time(NULL);
+			printf("Cronometru resetat pentru: %s\n", cale_accesata);
+			return;
+		}
 	}
 }
 
@@ -65,7 +80,7 @@ int main(){
 		if (fgets(line, sizeof(line), stdin) == NULL) {
 			break;
 			}
-
+	
 		lungime = strlen(line);
 		if (lungime > 0 && line[lungime-1] == '\n') {
  			line[lungime - 1] = '\0';
@@ -77,34 +92,22 @@ int main(){
 
 		comanda = strtok(line, " ");
 		argument = strtok(NULL, " ");
-		 if (comanda != NULL && strcmp(comanda, "cd") == 0){
 
 
-                }
-
-
-		if (comanda != NULL) {
-
-			if (strcmp(comanda, "cd") == 0) {
-				for (int i=0; i<nr_montari;i++){
-					if (argument!=NULL && strcmp(argument, lista_montari[i].destinatie) == 0){
-						printf("Se activeaza montarea pt: %s\n ", argument);
-						lista_montari[i].ultima_accesare =time(NULL);
-						printf("Timp resetat pentru %s\n", argument);
-						//Pt Lavinia, pui aici montarea:(montare(lista_montari[i].sursa, lista_montari[i].destinatie); 
-						afisare_status_timer_lavinia();
-						break;
-					}
-				}
-				if (argument!=NULL){
-					if (chdir(argument) != 0){
-						perror("cd failed");
-					}
+		if (comanda != NULL && strcmp(comanda, "cd") == 0) {
+			if (argument!=NULL){
+				actualizeaza_timp_acces_lavinia(argument);
+				if (chdir(argument) == 0){
+					printf("Director schimbat cu succes.\n");
+					afisare_status_timer_lavinia();
 				}else{
-					printf("Eroare: Introduceti cale pentru cd\n");
+					perror("amsh: cd failed");
 				}
+			}else {
+				printf("Eroare:  cd are nevoie de o cale.\n");
 			}
-			else if (strcmp(comanda, "lista") == 0){
+		}
+		else if (strcmp(comanda, "lista") == 0){
 				printf("Lista de mountpoint-uri active:\n");
                                 for (int i = 0; i<nr_montari; i++){
                                         printf("%d. %s -> %s (%d secunde)\n", i+1, lista_montari[i].sursa, lista_montari[i].destinatie, lista_montari[i].limita_timp);
@@ -129,6 +132,6 @@ int main(){
 				}
 		}
 	}
-return 0;
+	return 0;
 }
 
