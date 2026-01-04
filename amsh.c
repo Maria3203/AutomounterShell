@@ -2,8 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <unistd.h>   // Pentru fork() si execvp()
-#include <sys/wait.h> // Pentru wait()
+#include <unistd.h>
+#include <sys/wait.h>
+#include <pthread.h>
 
 typedef struct {
 	char sursa[70];
@@ -49,7 +50,7 @@ void afisare_status_timer_lavinia(){
 		if (secunde_trecute > lista_montari[i].limita_timp ){
 			printf("EXPIRAT - necesita demontare\n");
 		}else {
-			printf("OK\n");
+			printf("OK\n");}
 	}
 }
 
@@ -85,6 +86,7 @@ int main(){
 		if (lungime > 0 && line[lungime-1] == '\n') {
  			line[lungime - 1] = '\0';
 			}
+		if (strlen(line) == 0) continue;
 
 		if (strcmp(line, "exit") == 0) {
 			break;
@@ -107,6 +109,10 @@ int main(){
 				printf("Eroare:  cd are nevoie de o cale.\n");
 			}
 		}
+
+		else if (strcmp(comanda, "show_active") == 0) {
+		            afisare_status_timer_lavinia();}
+
 		else if (strcmp(comanda, "lista") == 0){
 				printf("Lista de mountpoint-uri active:\n");
                                 for (int i = 0; i<nr_montari; i++){
@@ -114,7 +120,7 @@ int main(){
                                 }
 
 			}
-			else { //saptamana2/
+			else {
 				pid_t pid = fork();
 				if (pid==0){
 						char *args[] = {comanda, argument, NULL};
@@ -131,7 +137,6 @@ int main(){
 				    }
 				}
 		}
-	}
 	return 0;
 }
 
