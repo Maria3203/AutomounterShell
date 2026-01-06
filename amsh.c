@@ -11,6 +11,7 @@ typedef struct {
 	char destinatie[70];
 	int limita_timp;
 	long ultima_accesare;
+	int e_montat; // 0 - nu e montat, 1 - e montat
 }Montare;
 
 Montare lista_montari[70];
@@ -25,6 +26,7 @@ void configuratie(char *fisier_citire){
 	while(fscanf(fisier, "%s %s %d",lista_montari[nr_montari].sursa, lista_montari[nr_montari].destinatie, &lista_montari[nr_montari].limita_timp) == 3)
 	{
 		lista_montari[nr_montari].ultima_accesare = 0;
+		lista_montari[nr_montari].e_montat = 0;
 		nr_montari++;
 	}
 	fclose(fisier);
@@ -65,6 +67,19 @@ void actualizeaza_timp_acces_lavinia( char *cale_accesata){
 	}
 }
 
+int demontare(char *destinatie){
+	char cmd[70];
+	strcpy(comanda, "demontare");
+	strcat(comanda, destinatie);
+	int rezultat = system(comanda);
+	if (rezultat == 0){
+		printf("Demontare efectuata pentru %s\n", destinatie);
+	}else{
+		printf("Demontare nereusita pentru %s\n", destinatie);
+	}
+	return rezultat;
+}
+
 int main(){
 	char line[1024];
 	char *comanda;
@@ -98,7 +113,14 @@ int main(){
 
 		if (comanda != NULL && strcmp(comanda, "cd") == 0) {
 			if (argument!=NULL){
-				actualizeaza_timp_acces_lavinia(argument);
+				for (int i = 0, i< nr_montari;i++){
+					if(strcmp(argument, lista_montari[i].destinatie) == 0){
+						if (lista_montari[i].e_montat ==1){
+							actializeaza_timp_access_lavinia(argument);
+						}
+						break;
+					}
+				}
 				if (chdir(argument) == 0){
 					printf("Director schimbat cu succes.\n");
 					afisare_status_timer_lavinia();
@@ -107,6 +129,29 @@ int main(){
 				}
 			}else {
 				printf("Eroare:  cd are nevoie de o cale.\n");
+			}
+		}
+
+		else if (strcmp(comanda, "demontare") == 0) {
+			if  (argument == NULL){
+			printf(Eroare: Comanda demontare nu a primit o cale.\n");
+			}else{
+				int gasit = -1;
+				for (int i =0;i<nr_montari, i++){
+					if (strcmp(lista_montari[i].destinatie, argument) == 0 &&lista_montari[i].e_montat == 1){
+					gasit =i;
+					break;
+					}
+				}
+			if (gasit == -1){
+			printf("Mountpoint-ul %s nu exista sau nu este activ.\n", argument);
+			}else{
+			if(demontare(argument)==0){
+				lista_montari[gasit].e_montat = 0;
+				lista_montari[gasit].ultima_accesare = 0;
+				print("Mountpoint_ul 5s a fost demontat manual.\n", argument);
+			}
+			}
 			}
 		}
 
