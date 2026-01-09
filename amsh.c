@@ -56,30 +56,55 @@ void afisare_status_timer_lavinia(){
 	}
 }
 
-void actualizeaza_timp_acces_lavinia( char *cale_accesata){
-	if (cale_accesata == NULL) return;
-	for (int i=0; i< nr_montari; i++){
-		if(strcmp(cale_accesata, lista_montari[i].destinatie) == 0){
-			lista_montari[i].ultima_accesare = time(NULL);
-			printf("Cronometru resetat pentru: %s\n", cale_accesata);
-			return;
+void actualizeaza_timp_acces_lavinia( int index){
+	if (index < 0 || index >= nr_montari) return;
+	lista_montari[index].ultima_accesare = time(NULL);
+	printf("Cronometru resetat pentru: %s\n", lista_montari[index].destinatie);
+}
+
+int montare_automata_lavinia(int index){
+	char comanda_sistem[150];
+	sprintf(comanda_sistem, "mount %s %s", lista_montari[index].sursa, lista_montari[index].destinatie);
+	printf("Execut: %s\n", comanda_sistem);
+	int rezultat = system(comanda_sistem);
+	if (rezultat == 0 ){
+		lista_montari[index].e_montat = 1;
+		lista_montari[index].ultima_accesare = time(NULL);
+		return 0;
+	}else{
+		return -1;
+	}
+}
+
+int demontare(int index){
+	char cmd[70];
+	sprintf(cmd, "umount %s", lista_montari[index].destinatie);
+	int rezultat = system(cmd);
+	if (rezultat == 0){
+		lista_montari[index].e_montat = 0;
+		printf("Demontare efectuata pentru %s\n", lista_montari[index].destinatie);
+		return 0;
+	}else{
+		printf("Eroare la demontare.\n");
+		return -1;
+	}
+}
+
+void verifica_expirare_si_demontare_lavinia(){
+	time_t acum = time(NULL);
+	for (int i = 0; i < nr_montari; i++){
+		if(lista_montari[i].e_montat == 1){
+			double secunde_trecute = difftime(acum, lista_montari[i].ultima_accesare);
+			if (secunde_trecute > lista_montari[i].limita_timp){
+				printf("Timp expirat pentru %s (%.0f secunde).Se executa demontarea automata\n",
+					lista_montari[i].destinatie, secunde_trecute);
+				if (demontare(i) == 0){
+					lista_montari[i].e_montat = 0;
+				}
+			}
 		}
 	}
 }
-
-int demontare(char *destinatie){
-	char cmd[70];
-	strcpy(comanda, "demontare");
-	strcat(comanda, destinatie);
-	int rezultat = system(comanda);
-	if (rezultat == 0){
-		printf("Demontare efectuata pentru %s\n", destinatie);
-	}else{
-		printf("Demontare nereusita pentru %s\n", destinatie);
-	}
-	return rezultat;
-}
-
 int main(){
 	char line[1024];
 	char *comanda;
@@ -89,6 +114,7 @@ int main(){
 	configuratie("test_configurare");
 	initializare_timp_lavinia();
 	while(1) {
+		verifica_expirare_si_demontare_lavinia();
 		printf("\n");
 		printf("amsh> ");
                 fflush(stdout);
@@ -113,12 +139,18 @@ int main(){
 
 		if (comanda != NULL && strcmp(comanda, "cd") == 0) {
 			if (argument!=NULL){
-				for (int i = 0, i< nr_montari;i++){
+				int index_gasit = -1;
+				for(int i = 0;i < nr_montari; i++){
 					if(strcmp(argument, lista_montari[i].destinatie) == 0){
-						if (lista_montari[i].e_montat ==1){
-							actializeaza_timp_access_lavinia(argument);
-						}
+						index_gasit = i;
 						break;
+					}
+				}
+				if (index_gasit != -1){
+					if(lista_montari[index_gasit].e_montat == 0){
+						montare_automata_lavinia(index_gasit);
+					}else{
+						actualizeaza_timp_acces_lavinia(index_gasit);
 					}
 				}
 				if (chdir(argument) == 0){
@@ -134,10 +166,10 @@ int main(){
 
 		else if (strcmp(comanda, "demontare") == 0) {
 			if  (argument == NULL){
-			printf(Eroare: Comanda demontare nu a primit o cale.\n");
+			printf("Eroare: Comanda demontare nu a primit o cale.\n");
 			}else{
 				int gasit = -1;
-				for (int i =0;i<nr_montari, i++){
+				for (int i =0;i<nr_montari; i++){
 					if (strcmp(lista_montari[i].destinatie, argument) == 0 &&lista_montari[i].e_montat == 1){
 					gasit =i;
 					break;
@@ -146,10 +178,10 @@ int main(){
 			if (gasit == -1){
 			printf("Mountpoint-ul %s nu exista sau nu este activ.\n", argument);
 			}else{
-			if(demontare(argument)==0){
+			if(demontare(gasit)==0){
 				lista_montari[gasit].e_montat = 0;
 				lista_montari[gasit].ultima_accesare = 0;
-				print("Mountpoint_ul 5s a fost demontat manual.\n", argument);
+				printf("Mountpoint_ul %s a fost demontat manual.\n", argument);
 			}
 			}
 			}
