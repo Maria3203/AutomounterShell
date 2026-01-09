@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <pthread.h>
-
+#include <signal.h>
 typedef struct {
 	char sursa[70];
 	char destinatie[70];
@@ -119,6 +119,7 @@ int main(){
 
 	configuratie("test_configurare");
 	initializare_timp_lavinia();
+	signal(SIGINT, SIG_IGN);
 	while(1) {
 		verifica_expirare_si_demontare_lavinia();
 		printf("\n");
