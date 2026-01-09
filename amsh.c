@@ -72,6 +72,7 @@ int montare_automata_lavinia(int index){
 		lista_montari[index].ultima_accesare = time(NULL);
 		return 0;
 	}else{
+		printf("Eroare la montare");
 		return -1;
 	}
 }
@@ -92,15 +93,20 @@ int demontare(int index){
 
 void verifica_expirare_si_demontare_lavinia(){
 	time_t acum = time(NULL);
+	char director_curent[200];
+	getcwd(director_curent, sizeof(director_curent));
 	for (int i = 0; i < nr_montari; i++){
 		if(lista_montari[i].e_montat == 1){
 			double secunde_trecute = difftime(acum, lista_montari[i].ultima_accesare);
 			if (secunde_trecute > lista_montari[i].limita_timp){
+				if(strstr(director_curent, lista_montari[i].destinatie) != NULL){
+					printf("Atentie: %s a expirat, dar este ocupat.Amanare demontare\n",
+						lista_montari[i].destinatie);
+					continue;
+				}
 				printf("Timp expirat pentru %s (%.0f secunde).Se executa demontarea automata\n",
 					lista_montari[i].destinatie, secunde_trecute);
-				if (demontare(i) == 0){
-					lista_montari[i].e_montat = 0;
-				}
+				demontare(i);
 			}
 		}
 	}
@@ -213,7 +219,15 @@ int main(){
 					perror("fork failed");
 				    }
 				}
+		
+		if(strcmp(line,"exit") == 0){
+			printf("Inchidere shell.Se demonteaza resursele active...\n");
+			for(int i = 0; i < nr_montari; i++){
+				if(lista_montari[i].e_montat == 1) demontare(i);
+			}
+			break;
 		}
+	}
 	return 0;
 }
 
