@@ -4,7 +4,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include <pthread.h>
 #include <signal.h>
 typedef struct {
 	char sursa[70];
